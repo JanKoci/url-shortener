@@ -35,6 +35,7 @@ async fn main() {
         .route("/health", get(health_handler))
         .route("/shorten", post(routes::shorten::shorten_handler))
         .route("/stats/{code}", get(routes::stats::stats_handler))
+        .route("/qr/{code}", get(routes::qr::qr_handler))
         .route("/{code}", get(routes::redirect::redirect_handler))
         .layer(GovernorLayer::new(govener_config))
         .with_state(state);
