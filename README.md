@@ -10,11 +10,12 @@ A hobby project built in Rust to learn web APIs, databases, and backend fundamen
 
 ## Features
 
-- `POST /shorten` — accepts a long URL, returns a short code
-- `GET /{code}` — redirects to the original URL, increments click count
+- `POST /shorten` — accepts a long URL and optional `expires_in_seconds`, returns a short code
+- `GET /{code}` — redirects to the original URL, increments click count; returns `410 Gone` if expired
 - `GET /stats/{code}` — returns click count and metadata for a short URL
 - `GET /health` — health check with DB ping
 - Rate limiting per IP address
+- Link expiration — short URLs can be created with a TTL
 
 ## Running locally
 
