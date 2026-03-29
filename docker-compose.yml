@@ -1,0 +1,10 @@
+# docker-compose.yml
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: url_shortener
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
