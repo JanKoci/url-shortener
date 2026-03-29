@@ -15,6 +15,7 @@ use tower_http::trace::TraceLayer;
 #[derive(Clone)]
 pub struct AppState {
     pub db: sqlx::PgPool,
+    pub redis: redis::aio::MultiplexedConnection,
 }
 
 #[tokio::main]
@@ -24,10 +25,19 @@ async fn main() {
         .init();
     dotenvy::dotenv().ok();
 
+    // connect to db
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
     let pool = sqlx::PgPool::connect(&db_url)
         .await
         .expect("Failed to connect to database");
+
+    // connect to reddis
+    let redis_url = std::env::var("REDIS_URL").expect("REDIS_URL not set");
+    let redis_client = redis::Client::open(redis_url).expect("Invalid Redis URL");
+    let redis = redis_client
+        .get_multiplexed_tokio_connection()
+        .await
+        .expect("Failed to connect to Redis");
 
     let govener_config = Arc::new(
         GovernorConfigBuilder::default()
@@ -37,7 +47,7 @@ async fn main() {
             .unwrap(),
     );
 
-    let state = AppState { db: pool };
+    let state = AppState { db: pool, redis };
     let app = Router::new()
         .route("/health", get(health_handler))
         .route("/shorten", post(routes::shorten::shorten_handler))

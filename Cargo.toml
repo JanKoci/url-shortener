@@ -20,3 +20,4 @@ image = "0.25"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tower-http = { version = "0.6", features = ["trace"] }
+redis = { version = "0.27", features = ["tokio-comp"] }
