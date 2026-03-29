@@ -17,3 +17,6 @@ chrono = { version = "0.4", features = ["serde"] }
 tower_governor = "0.8"
 qrcode = "0.14"
 image = "0.25"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tower-http = { version = "0.6", features = ["trace"] }

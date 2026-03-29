@@ -36,5 +36,6 @@ pub async fn shorten_handler(
     .execute(&state.db)
     .await?;
 
+    tracing::info!(short_code = %code, original_url = %body.url, "short URL created");
     Ok(Json(ShortenResponse { short_code: code }))
 }

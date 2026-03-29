@@ -10,6 +10,7 @@ use axum::{
     Router,
 };
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
+use tower_http::trace::TraceLayer;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -18,6 +19,9 @@ pub struct AppState {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_env_filter("url_shortener=debug,tower_http=debug")
+        .init();
     dotenvy::dotenv().ok();
 
     let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
@@ -40,12 +44,17 @@ async fn main() {
         .route("/stats/{code}", get(routes::stats::stats_handler))
         .route("/qr/{code}", get(routes::qr::qr_handler))
         .route("/{code}", get(routes::redirect::redirect_handler))
+        .layer(TraceLayer::new_for_http())
         .layer(GovernorLayer::new(govener_config))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
         .unwrap();
+    tracing::info!(
+        "Server started on http://{}",
+        listener.local_addr().unwrap()
+    );
     axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),

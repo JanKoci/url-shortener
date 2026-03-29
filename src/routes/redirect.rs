@@ -18,6 +18,7 @@ pub async fn redirect_handler(
     match row {
         Some(r) => {
             if is_expired(r.expires_at) {
+                tracing::warn!(short_code = %code, "attempt to access expired link");
                 return Err(AppError::Gone);
             }
             sqlx::query!(
@@ -26,6 +27,7 @@ pub async fn redirect_handler(
             )
             .execute(&state.db)
             .await?;
+            tracing::info!(short_code = %code, original_url = %r.original_url, "redirecting");
             Ok(Redirect::to(&r.original_url).into_response())
         }
         None => Err(AppError::NotFound),
