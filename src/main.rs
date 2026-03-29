@@ -2,8 +2,11 @@ mod errors;
 mod routes;
 mod utils;
 
+use std::net::SocketAddr;
+use std::sync::Arc;
 use axum::routing::post;
 use axum::{routing::get, Router};
+use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -18,6 +21,14 @@ async fn main() {
     let pool = sqlx::PgPool::connect(&db_url)
         .await
         .expect("Failed to connect to database");
+    
+    let govener_config = Arc::new(
+        GovernorConfigBuilder::default()
+            .per_second(2) // 1 token added every 2 seconds
+            .burst_size(5) // allow bursts of up to 5 requests
+            .finish()
+            .unwrap(),
+    );
 
     let state = AppState { db: pool };
     let app = Router::new()
@@ -25,12 +36,13 @@ async fn main() {
         .route("/shorten", post(routes::shorten::shorten_handler))
         .route("/stats/{code}", get(routes::stats::stats_handler))
         .route("/{code}", get(routes::redirect::redirect_handler))
+        .layer(GovernorLayer::new(govener_config))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
         .unwrap();
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await.unwrap();
 }
 
 async fn health_handler(
