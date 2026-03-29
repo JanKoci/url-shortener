@@ -1,10 +1,11 @@
-use crate::errors::AppError;
-use crate::AppState;
-use axum::extract::{Path, State};
-use axum::Json;
+use axum::{
+    extract::{Path, State},
+    Json,
+};
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use sqlx::types::chrono;
+
+use crate::{errors::AppError, AppState};
 
 #[derive(Serialize)]
 pub struct StatsResponse {

@@ -1,21 +1,23 @@
-use crate::errors::AppError;
-use crate::AppState;
-use axum::extract::{Path, State};
-use axum::response::{IntoResponse, Redirect};
-use chrono::Utc;
+use axum::{
+    extract::{Path, State},
+    response::{IntoResponse, Redirect},
+};
+
+use crate::{errors::AppError, utils::is_expired, AppState};
 
 pub async fn redirect_handler(
     State(state): State<AppState>,
     Path(code): Path<String>,
 ) -> Result<impl IntoResponse, AppError> {
-    let row = sqlx::query!("SELECT original_url, expires_at FROM urls WHERE short_code = $1", code)
-        .fetch_optional(&state.db)
-        .await?;
+    let row = sqlx::query!(
+        "SELECT original_url, expires_at FROM urls WHERE short_code = $1",
+        code
+    )
+    .fetch_optional(&state.db)
+    .await?;
     match row {
         Some(r) => {
-            let is_expired = r.expires_at.map(|d| d < Utc::now()).unwrap_or(false);
-
-            if is_expired {
+            if is_expired(r.expires_at) {
                 return Err(AppError::Gone);
             }
             sqlx::query!(

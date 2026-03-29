@@ -1,10 +1,9 @@
-use crate::errors::AppError;
-use crate::utils::generate_code;
-use crate::AppState;
 use axum::{extract::State, Json};
 use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
 use url::Url;
+
+use crate::{errors::AppError, utils::generate_code, AppState};
 
 #[derive(Deserialize)]
 pub struct ShortenRequest {

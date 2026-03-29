@@ -1,23 +1,25 @@
-use axum::extract::{Path, State};
-use chrono::Utc;
-use crate::AppState;
-use crate::errors::AppError;
+use axum::{
+    extract::{Path, State},
+    http::{header, HeaderMap},
+};
 use image::Luma;
 use qrcode::{types::QrError, QrCode};
-use axum::http::{header, HeaderMap};
+
+use crate::{errors::AppError, utils::is_expired, AppState};
 
 pub async fn qr_handler(
     State(state): State<AppState>,
     Path(code): Path<String>,
 ) -> Result<(HeaderMap, Vec<u8>), AppError> {
-    let row = sqlx::query!("SELECT original_url, expires_at FROM urls WHERE short_code = $1", code)
-        .fetch_optional(&state.db)
-        .await?;
+    let row = sqlx::query!(
+        "SELECT original_url, expires_at FROM urls WHERE short_code = $1",
+        code
+    )
+    .fetch_optional(&state.db)
+    .await?;
     match row {
         Some(r) => {
-            let is_expired = r.expires_at.map(|d| d < Utc::now()).unwrap_or(false);
-
-            if is_expired {
+            if is_expired(r.expires_at) {
                 return Err(AppError::Gone);
             }
             let qr = QrCode::new(r.original_url.as_bytes())
@@ -38,5 +40,4 @@ pub async fn qr_handler(
         }
         None => Err(AppError::NotFound),
     }
-    
 }

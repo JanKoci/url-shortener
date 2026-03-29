@@ -2,10 +2,13 @@ mod errors;
 mod routes;
 mod utils;
 
-use axum::routing::post;
-use axum::{routing::get, Router};
 use std::net::SocketAddr;
 use std::sync::Arc;
+
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use tower_governor::{governor::GovernorConfigBuilder, GovernorLayer};
 
 #[derive(Clone)]
