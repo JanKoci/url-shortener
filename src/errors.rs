@@ -7,6 +7,7 @@ pub enum AppError {
     NotFound,
     BadRequest(String),
     InternalServerError,
+    Gone,
 }
 
 impl IntoResponse for AppError {
@@ -18,6 +19,7 @@ impl IntoResponse for AppError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Internal Server Error".to_string(),
             ),
+            AppError::Gone => (StatusCode::GONE, "URL entry is expired".to_string()),
         };
         (status, Json(json!({"error": message}))).into_response()
     }
